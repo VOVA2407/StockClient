@@ -1,0 +1,11 @@
+{
+  "Version": 1,
+  "Hash": "CzKhemCdc3mTh4L0o8uG+XCiaC0n4cLUs8EcpUzVLJs=",
+  "Source": "StockClient",
+  "BasePath": "_content/StockClient",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [],
+  "Assets": []
+}
