@@ -1,13 +1,10 @@
 ﻿using Serilog;
-using System.Runtime.CompilerServices;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging.Configuration;
 
 namespace StockClient.Extensions;
 
-public class Extensions
+public static class Extensions
 {
-    public IServiceCollection AddLogger(IServiceCollection services)
+    public static IServiceCollection AddLogger(IServiceCollection services)
     {
 
         var configuration = new ConfigurationBuilder()
@@ -20,6 +17,17 @@ public class Extensions
             .ReadFrom.Configuration(configuration)
             .CreateLogger();
 
+        return services;
+    }
+
+    public static IServiceCollection AddHttpClientFactory(IServiceCollection services)
+    {
+        services.AddHttpClient("TwelveApi", client =>
+        {
+            client.BaseAddress = new Uri("https://twelve-data1.p.rapidapi.com/");
+            client.DefaultRequestHeaders.Add("X-RapidAPI-Key", "be0aa279f7msh3b546c10c7a956ap1e30f0jsn733747cd1cd9");
+            client.DefaultRequestHeaders.Add("X-RapidAPI-Host", "twelve-data1.p.rapidapi.com");
+        });
         return services;
     }
 

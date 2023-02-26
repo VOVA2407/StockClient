@@ -1,6 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.WebUtilities;
 using StockClient.Database;
 using StockClient.Model;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using System.Collections.Generic;
+using System.Linq;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using StockClient.Enums;
+using System.Reflection.Metadata.Ecma335;
 
 namespace StockClient.Controllers;
 
@@ -9,41 +16,47 @@ namespace StockClient.Controllers;
 [Route("[controller]")]
 public class StockController : ControllerBase
 {
-    private ILogger<StockController> _logger;
+    private readonly ILogger<StockController> _logger;
+    private readonly IHttpClientFactory _httpClientFactory;
 
-    public StockController(ILogger<StockController> logger)
+    public StockController(ILogger<StockController> logger, IHttpClientFactory clientFactory)
     {
         _logger = logger;
+        _httpClientFactory = clientFactory;
     }
 
     [HttpGet(Name = "GetStocks")]
-    public async void GetStocks()
+    public async Task<IActionResult> GetStocks()
     {
-        var client = new HttpClient();
-        var request = new HttpRequestMessage
+        var client = _httpClientFactory.CreateClient("TwelveApi");
+
+        Dictionary<string, string> parameters = new Dictionary<string, string> { 
+            { "exchange", "NASDAQ" },
+            { "format", "json" } 
+        };
+        FormUrlEncodedContent encodedContent = new FormUrlEncodedContent(parameters);
+
+        HttpRequestMessage request = new HttpRequestMessage
         {
             Method = HttpMethod.Get,
-            RequestUri = new Uri("https://twelve-data1.p.rapidapi.com/stocks?exchange=NASDAQ&format=json"),
-            Headers =
-    {
-        { "X-RapidAPI-Key", "be0aa279f7msh3b546c10c7a956ap1e30f0jsn733747cd1cd9" },
-        { "X-RapidAPI-Host", "twelve-data1.p.rapidapi.com" },
-    },
+            Content= encodedContent,
+            RequestUri = new Uri("stocks?exchange=NASDAQ&format=json", UriKind.Relative)
         };
+       
         using (var response = await client.SendAsync(request))
         {
             response.EnsureSuccessStatusCode();
-            _logger.LogInformation("test");
-            Stocks stocks = await response.Content.ReadFromJsonAsync<Stocks>();
+            TwelveResponse<Stock>? stocks = await response.Content.ReadFromJsonAsync<TwelveResponse<Stock>>();
 
+            if (!stocks!.Data.Any())
+                return NoContent();
+              
             using (var context = new ApplicationContext())
             {
-                foreach(Stock stock in stocks.Stock)
-                    context.Stocks.Add(stock);
-             
+                stocks.Data.ToList().ForEach(stock => { context.Stocks.Add(stock); });
                 context.SaveChanges();
             }
-
+            return Ok();
         }
     }
 }
