@@ -8,6 +8,7 @@ using System.Linq;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using StockClient.Enums;
 using System.Reflection.Metadata.Ecma335;
+using StockClient.Services;
 
 namespace StockClient.Controllers;
 
@@ -18,31 +19,34 @@ public class StockController : ControllerBase
 {
     private readonly ILogger<StockController> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
+    private readonly IStockService _stockService;
 
-    public StockController(ILogger<StockController> logger, IHttpClientFactory clientFactory)
+    public StockController(ILogger<StockController> logger, IHttpClientFactory clientFactory, IStockService service)
     {
         _logger = logger;
         _httpClientFactory = clientFactory;
+        _stockService = service;
     }
 
-    [HttpGet(Name = "GetStocks")]
+    [HttpGet(Name = "GetStocksFromApi")]
     public async Task<IActionResult> GetStocks()
     {
+        _logger.LogInformation("test");
         var client = _httpClientFactory.CreateClient("TwelveApi");
 
-        Dictionary<string, string> parameters = new Dictionary<string, string> { 
+        Dictionary<string, string> parameters = new Dictionary<string, string> {
             { "exchange", "NASDAQ" },
-            { "format", "json" } 
+            { "format", "json" }
         };
         FormUrlEncodedContent encodedContent = new FormUrlEncodedContent(parameters);
 
         HttpRequestMessage request = new HttpRequestMessage
         {
             Method = HttpMethod.Get,
-            Content= encodedContent,
+            Content = encodedContent,
             RequestUri = new Uri("stocks?exchange=NASDAQ&format=json", UriKind.Relative)
         };
-       
+
         using (var response = await client.SendAsync(request))
         {
             response.EnsureSuccessStatusCode();
@@ -50,13 +54,20 @@ public class StockController : ControllerBase
 
             if (!stocks!.Data.Any())
                 return NoContent();
-              
-            using (var context = new ApplicationContext())
+
+            using (var context = new ApiDbContext())
             {
                 stocks.Data.ToList().ForEach(stock => { context.Stocks.Add(stock); });
                 context.SaveChanges();
             }
             return Ok();
         }
+    }
+
+    [HttpGet("GetStocksFromDb")]
+    public async Task<IEnumerable<Stock>> GetStocksFromDb()
+    {
+        var res = await _stockService.GetStocks(CancellationToken.None);
+        return res.Take(10);
     }
 }

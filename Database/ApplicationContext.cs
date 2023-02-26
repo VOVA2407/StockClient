@@ -3,10 +3,10 @@ using StockClient.Model;
 
 namespace StockClient.Database
 {
-    public class ApplicationContext : DbContext
+    public class ApiDbContext : DbContext
     {
         public DbSet<Stock> Stocks => Set<Stock>();
-        public ApplicationContext() => Database.EnsureCreated();
+        public ApiDbContext() => Database.EnsureCreated();
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

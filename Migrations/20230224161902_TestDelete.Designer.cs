@@ -10,7 +10,7 @@ using StockClient.Database;
 
 namespace StockClient.Migrations
 {
-    [DbContext(typeof(ApplicationContext))]
+    [DbContext(typeof(ApiDbContext))]
     [Migration("20230224161902_TestDelete")]
     partial class TestDelete
     {

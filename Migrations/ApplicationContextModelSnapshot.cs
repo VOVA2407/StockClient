@@ -9,7 +9,7 @@ using StockClient.Database;
 
 namespace StockClient.Migrations
 {
-    [DbContext(typeof(ApplicationContext))]
+    [DbContext(typeof(ApiDbContext))]
     partial class ApplicationContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)
