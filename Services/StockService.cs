@@ -17,4 +17,11 @@ public class StockService : IStockService
     {
         return await _context.Stocks.ToArrayAsync();
     }
+
+    public async Task AddStocks(IEnumerable<Stock> stocks)
+    {
+        stocks.ToList().ForEach(stock => { _context.Stocks.Add(stock); });
+        await _context.SaveChangesAsync();
+    }
+
 }

@@ -20,12 +20,14 @@ public class StockController : ControllerBase
     private readonly ILogger<StockController> _logger;
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly IStockService _stockService;
+    private readonly ApiDbContext _context;
 
-    public StockController(ILogger<StockController> logger, IHttpClientFactory clientFactory, IStockService service)
+    public StockController(ILogger<StockController> logger, IHttpClientFactory clientFactory, IStockService service, ApiDbContext context)
     {
         _logger = logger;
         _httpClientFactory = clientFactory;
         _stockService = service;
+        _context = context;
     }
 
     [HttpGet(Name = "GetStocksFromApi")]
@@ -55,11 +57,8 @@ public class StockController : ControllerBase
             if (!stocks!.Data.Any())
                 return NoContent();
 
-            using (var context = new ApiDbContext())
-            {
-                stocks.Data.ToList().ForEach(stock => { context.Stocks.Add(stock); });
-                context.SaveChanges();
-            }
+            await _stockService.AddStocks(stocks.Data);
+          
             return Ok();
         }
     }
