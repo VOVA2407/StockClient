@@ -17,7 +17,7 @@ builder.Host.UseSerilog();
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddHealthChecks();
 builder.Services.AddDbContext<ApiDbContext>();
 builder.Services.AddHttpClientFactory();
 builder.Services.AddServices();
@@ -39,5 +39,6 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHealthChecks("/healthcheck");
 
 app.Run();

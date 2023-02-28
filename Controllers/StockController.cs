@@ -34,33 +34,15 @@ public class StockController : ControllerBase
     public async Task<IActionResult> GetStocks()
     {
         _logger.LogInformation("test");
-        var client = _httpClientFactory.CreateClient("TwelveApi");
 
-        Dictionary<string, string> parameters = new Dictionary<string, string> {
-            { "exchange", "NASDAQ" },
-            { "format", "json" }
-        };
-        FormUrlEncodedContent encodedContent = new FormUrlEncodedContent(parameters);
+        IEnumerable<Stock> stocks = await _stockService.GetStocksFromExternal();
 
-        HttpRequestMessage request = new HttpRequestMessage
-        {
-            Method = HttpMethod.Get,
-            Content = encodedContent,
-            RequestUri = new Uri("stocks?exchange=NASDAQ&format=json", UriKind.Relative)
-        };
+        if (!stocks.Any())
+            return NoContent();
 
-        using (var response = await client.SendAsync(request))
-        {
-            response.EnsureSuccessStatusCode();
-            TwelveResponse<Stock>? stocks = await response.Content.ReadFromJsonAsync<TwelveResponse<Stock>>();
-
-            if (!stocks!.Data.Any())
-                return NoContent();
-
-            await _stockService.AddStocks(stocks.Data);
+        await _stockService.AddStocks(stocks);
           
-            return Ok();
-        }
+        return Ok();
     }
 
     [HttpGet("GetStocksFromDb")]
